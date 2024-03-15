@@ -1,0 +1,20 @@
+[project]
+
+name = 'rediq'
+version = '0.0.1'
+description = 'a lightweight, stateless, asynchronous redis task queue.'
+authors = [{ name = 'Jony', email = 'jony.jobmail@foxmail.com' }]
+readme = 'README.md'
+license = { file = 'LICENSE' }
+keywords = ['redis', 'taskqueue', 'asyncio', 'coroutine', 'async', 'asynchronous', 'celery', 'rq']
+
+requires-python = '>=3.10'
+
+dependencies = [
+    'redis[hiredis]>=4.2.0',
+    'click>=8.0',
+    'pytz>=2024.1',
+]
+
+[project.scripts]
+rediq = 'rediq:rediq_cli'
