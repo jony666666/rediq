@@ -41,7 +41,6 @@ class Rediq:
 
     def event(self, *args,
         event_name: Optional[ Literal[
-            'after_task_enqueue',
             'before_task_start', 
             'before_task_retry', 
             'after_task_success', 
@@ -60,7 +59,6 @@ class Rediq:
                 raise TypeError(f'a event handler must be a coroutine function')
             _event_name = event_name or corofn.__name__
             assert _event_name in (
-                'after_task_enqueue',
                 'before_task_start', 
                 'before_task_retry', 
                 'after_task_success', 

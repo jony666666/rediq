@@ -67,22 +67,6 @@ async def test2():
     return 'test2 finished'
 
 @rediq.event
-async def after_task_enqueue():
-
-    print(
-        'after_task_enqueue', 
-        return_exception(current_task_info)(),
-        return_exception(current_task_retried)(),
-        return_exception(current_task_result)(),
-        return_exception(current_task_exception)(),
-    )
-
-    try:
-        await run_in_current_executor(executor_inner)
-    except Exception as e:
-        print('after_task_enqueue', e)
-
-@rediq.event
 async def before_task_start():
 
     print(

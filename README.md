@@ -75,10 +75,6 @@ async def before_task_start():
     print(current_task_info()) # 获取任务id、注册任务时的各种参数
 
 @app.event
-async def after_task_enqueue(): # 注意这个事件会在生产者进程中执行
-    print(current_task_info()) 
-
-@app.event
 async def before_task_retry():
     print(current_task_retried()) # 获取任务当前的重试次数
     
@@ -142,20 +138,17 @@ def _simple_task():
     return dict(task_id = task_id.hex())
 ```
 
-4、函数 <code>current_task_info()</code> <code>current_task_result()</code> <code>current_task_exception()</code> <code>current_task_retried()</code> <code>run_in_current_executor(fn)</code> 都与当前的上下文有关，显然其中有的只能用于特定的事件处理函数中，具体对应关系如下：
+4、函数 <code>current_xxx()</code> 都与当前的上下文有关，显然其中有的只能用于特定的事件处理函数中，具体对应关系如下：
 
 | | run_in_current_executor | current_task_info | current_task_groups | current_task_retried | current_task_result | current_task_exception |
 |-------|-------|-------|-------|-------|-------|-------|
-| after_task_enqueue | :heavy_multiplication_x: | :heavy_check_mark: | :heavy_check_mark: |:heavy_check_mark: | :heavy_multiplication_x: | :heavy_multiplication_x: |
-| before_task_start | :heavy_check_mark: | :heavy_check_mark: |:heavy_check_mark: |:heavy_check_mark: | :heavy_multiplication_x: | :heavy_multiplication_x: |
 | @task | :heavy_check_mark: | :heavy_check_mark: | :heavy_check_mark: |:heavy_check_mark: | :heavy_multiplication_x: | :heavy_multiplication_x: |
+| before_task_start | :heavy_check_mark: | :heavy_check_mark: |:heavy_check_mark: |:heavy_check_mark: | :heavy_multiplication_x: | :heavy_multiplication_x: |
 | before_task_retry | :heavy_check_mark: | :heavy_check_mark: |:heavy_check_mark: | :heavy_check_mark: | :heavy_multiplication_x: | :heavy_multiplication_x: |
 | after_task_success | :heavy_check_mark: | :heavy_check_mark: |:heavy_check_mark: | :heavy_check_mark: | :heavy_check_mark: | :heavy_multiplication_x: |
 | after_task_failure | :heavy_check_mark: | :heavy_check_mark: |:heavy_check_mark: | :heavy_check_mark: | :heavy_multiplication_x: | :heavy_check_mark: |
 | before_worker_startup | :heavy_check_mark: | :heavy_multiplication_x: | :heavy_multiplication_x: | :heavy_multiplication_x: | :heavy_multiplication_x: | :heavy_multiplication_x: |
 | after_worker_shutdown | :heavy_check_mark: | :heavy_multiplication_x: | :heavy_multiplication_x: | :heavy_multiplication_x: | :heavy_multiplication_x: | :heavy_multiplication_x: |
-
-其中<code>after_task_enqueue</code>通常不会在Worker进程中执行（除非在Worker进程中发布任务），如果不在Worker进程中就无法获取到executor，进而不保证可以使用<code>run_in_current_executor(fn)</code>
 
 ## TODO
 - CRON模块

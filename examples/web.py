@@ -21,11 +21,10 @@ from rediq import (
 
 class TaskState(IntEnum):
 
-    ENQUEUED = 1
-    STARTED = 2
-    RETRYING = 3
-    SUCCESSFUL = 4
-    FAILED = 5
+    STARTED = 1
+    RETRYING = 2
+    SUCCESSFUL = 3
+    FAILED = 4
     
 class Task(Model):
 
@@ -75,7 +74,7 @@ fastapi.add_event_handler('startup', on_startup)
 fastapi.add_event_handler('shutdown', on_shutdown)
 
 @rediq.event
-async def after_task_enqueue():
+async def before_task_start():
     await Task(
         task_id = current_task_info().task_id.hex(),
         task_name = current_task_info().task_name,
@@ -83,17 +82,11 @@ async def after_task_enqueue():
         task_priority = current_task_info().task_priority,
         task_retries = current_task_info().task_retries,
         task_timeout = current_task_info().task_timeout,
-        task_state = TaskState.ENQUEUED,
+        task_state = TaskState.STARTED,
         task_retried = current_task_retried(),
         task_result = None,
         task_exception = None,
     ).save()
-
-@rediq.event
-async def before_task_start():
-    await Task \
-        .filter(task_id = current_task_info().task_id.hex()) \
-        .update(task_state = TaskState.STARTED)
 
 @rediq.event
 async def before_task_retry():
