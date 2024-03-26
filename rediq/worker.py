@@ -1,6 +1,6 @@
 import asyncio
 
-from typing import Literal
+from typing import Literal, Tuple, Dict, Any
 from signal import SIGINT, SIGTERM, SIGHUP, Signals
 from concurrent.futures import ThreadPoolExecutor, ProcessPoolExecutor
 from functools import partial
@@ -9,7 +9,8 @@ from .app import Rediq
 from .loggers import get_logger
 from .exceptions import RedisQueueEmptyError
 from .contexts import (
-    cv_task_info, 
+    cv_task_info,
+    cv_task_groups,
     cv_task_retried,
     cv_task_result,
     cv_task_exception,
@@ -26,8 +27,9 @@ async def _execute_task(
     app: Rediq,
     task_name: str,
     task_id: bytes,
-    *task_args,
-    **task_kwargs,
+    task_args: Tuple[Any, ...],
+    task_kwargs: Dict[str, Any],
+    task_groups: Tuple[str, ...],
 ):
     
     task_info = TaskInfoNamedTuple(
@@ -50,10 +52,12 @@ async def _execute_task(
     cv_task_retried_token = None
     cv_task_result_token = None
     cv_task_exception_token = None
+    cv_task_groups_token = None
 
     logger.info(f'task "{task_name}" is starting')
 
     cv_task_info_token = cv_task_info.set(task_info)
+    cv_task_groups_token = cv_task_groups.set(task_groups)
     cv_task_retried_token = cv_task_retried.set(0)
 
     try:
@@ -102,6 +106,8 @@ async def _execute_task(
         cv_task_result.reset(cv_task_result_token)
     if cv_task_exception_token:
         cv_task_exception.reset(cv_task_exception_token)
+    if cv_task_groups_token:
+        cv_task_groups.reset(cv_task_groups_token)
 
 
 def start_worker(
@@ -141,8 +147,8 @@ def start_worker(
                 if code == 1:
                     break
                 _, message_id, message = items
-                task_name, task_args, task_kwargs = app._serializer.loads(message)
-                await _execute_task(app, task_name, message_id, *task_args, **task_kwargs)
+                task_name, task_args, task_kwargs, task_groups = app._serializer.loads(message)
+                await _execute_task(app, task_name, message_id, task_args, task_kwargs, task_groups)
 
         logger.info(f'task loop is starting up')
         await asyncio.gather(*( inner_execute_loop() for _ in range(worker_task_concurrency) ))

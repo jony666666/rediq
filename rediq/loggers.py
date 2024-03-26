@@ -19,7 +19,7 @@ def config_logger(
     if echo:
         stream_handler = logging.StreamHandler()
         formatter = logging.Formatter(
-            fmt= f'%(process)d - %(thread)d - %(name)s - %(levelname)s - { prefix_str } %(message)s',
+            fmt= f'%(name)s - %(levelname)s - { prefix_str } %(message)s',
         )
         stream_handler.setFormatter(formatter)
         logger.addHandler(stream_handler)
@@ -27,7 +27,7 @@ def config_logger(
     if path:
         file_handler = logging.FileHandler(path)
         formatter = logging.Formatter(
-            fmt= f'%(asctime)s - %(process)d - %(thread)d - %(name)s - %(levelname)s - { prefix_str } %(message)s',
+            fmt= f'%(asctime)s - %(name)s - %(levelname)s - { prefix_str } %(message)s',
             datefmt='%Y-%m-%d %I:%M:%S',
         )
         file_handler.setFormatter(formatter)

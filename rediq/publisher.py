@@ -1,9 +1,12 @@
+from typing import Tuple
+
 from .app import Rediq
 from .loggers import get_logger
 from .contexts import (
     TaskInfoNamedTuple,
     cv_task_info,
     cv_task_retried,
+    cv_task_groups,
 )
 from .constants import (
     DEFAULT_TASK_QUEUE_SIZE
@@ -14,6 +17,7 @@ logger = get_logger('publisher')
 async def _execute_task_event(
     app: Rediq,
     task_name: str,
+    task_groups: Tuple[str, ...],
     task_id: bytes,
 ):
 
@@ -28,6 +32,7 @@ async def _execute_task_event(
 
     cv_task_info_token = cv_task_info.set(task_info)
     cv_task_retried_token = cv_task_retried.set(0)
+    cv_task_groups_token = cv_task_groups.set(task_groups)
 
     logger.info(f'task "{task_name}" is enqueued')
     
@@ -39,6 +44,7 @@ async def _execute_task_event(
 
     cv_task_info.reset(cv_task_info_token)
     cv_task_retried.reset(cv_task_retried_token)
+    cv_task_groups.reset(cv_task_groups_token)
     
 class TaskPublisherFactory:
 
@@ -62,6 +68,17 @@ class TaskPublisher:
         self._task_name = task_name 
         self._task_args = task_args
         self._task_kwargs = task_kwargs
+        self._task_groups = ()
+
+    def groups(self, *task_groups: str):
+        instance = self.__class__(
+            app = self._app,
+            task_name = self._task_name,
+            task_args = self._task_args,
+            task_kwargs = self._task_kwargs,
+        )
+        instance._task_groups = task_groups
+        return instance
 
     async def enqueue(self):
 
@@ -72,6 +89,7 @@ class TaskPublisher:
             self._task_name,
             self._task_args,
             self._task_kwargs,
+            self._task_groups,
         ])
 
         task_id = await self._app._queue.enqueue(
@@ -81,6 +99,11 @@ class TaskPublisher:
             message = task_message,
         )
 
-        await _execute_task_event(self._app, self._task_name, task_id)
+        await _execute_task_event(
+            app = self._app, 
+            task_name = self._task_name, 
+            task_groups = self._task_groups,
+            task_id = task_id,
+        )
 
         return task_id

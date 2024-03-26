@@ -1,9 +1,10 @@
 from asyncio import get_event_loop
 from concurrent.futures import ThreadPoolExecutor, ProcessPoolExecutor
-from typing import Any, NamedTuple, Callable, Union
+from typing import Any, NamedTuple, Callable, Union, Tuple
 from contextvars import ContextVar
 
 cv_task_info = ContextVar('task_info')
+cv_task_groups = ContextVar('task_groups')
 cv_task_result = ContextVar('task_result')
 cv_task_exception = ContextVar('task_exception')
 cv_task_retried = ContextVar('task_retried')
@@ -19,6 +20,9 @@ class TaskInfoNamedTuple(NamedTuple):
 
 def current_task_info() -> TaskInfoNamedTuple:
     return cv_task_info.get()
+
+def current_task_groups() -> Tuple[str, ...]:
+    return cv_task_groups.get()
 
 def current_task_retried() -> int:
     return cv_task_retried.get()

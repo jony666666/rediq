@@ -5,6 +5,7 @@ from .contexts import (
     current_task_info,
     current_task_result,
     current_task_retried,
+    current_task_groups,
     run_in_current_executor,
 )
 
@@ -15,5 +16,6 @@ __all__ = (
     'current_task_info',
     'current_task_result',
     'current_task_retried',
+    'current_task_groups',
     'run_in_current_executor'
 )
